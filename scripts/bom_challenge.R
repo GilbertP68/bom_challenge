@@ -31,26 +31,34 @@ bom_raw <- read_csv("Data/BOM_data.csv", na = "-",
                        Day = col_double(),
                        Temp_min_max = col_character(),
                        Rainfall = col_double(),
-                       Solar_exposure = col_double()
+                       Solar_exposure = col_double() # The col_character for Solar_exposure has been changed to col_double as type
                      ))
 bom_raw
 
+
 bom_data <- bom_raw %>% 
-  separate(col = Temp_min_max, into = c("Temp_min","Temp_max"), sep="/") %>% 
-  mutate(Temp_min = ifelse(str_detect(Temp_min,"-"),yes = NA,no = Temp_min),
-         Temp_max = ifelse(str_detect(Temp_max,"-"),yes = NA,no = Temp_max))%>%
-  mutate_at(vars(Temp_min, Temp_max), as.numeric)
+ separate(col = Temp_min_max, into = c("Temp_min","Temp_max"), sep="/") %>% # Split columns Temp_min_max into Temp_min and Temp_max
+ mutate(Temp_min = ifelse(str_detect(Temp_min,"-"),yes = NA,no = Temp_min), # Replacing "-" with NA in Temp_min
+        Temp_max = ifelse(str_detect(Temp_max,"-"),yes = NA,no = Temp_max))%>% # # Replacing "-" with NA in Temp_max
+ mutate_at(vars(Temp_min, Temp_max), as.numeric) %>% 
+ write_csv("Data/bom_data.csv") 
+
+#----- Check for non-numeric -----#
+#bom_data <- read.csv("")%>%  
+  filter(!is.na(Temp_min | Temp_max)) # Checking for non-numeric data in Temp_min
 
 bom_data%>%
-  filter(!is.na(Solar_exposure))
+  filter(!is.na(Temp_max)) # Checking for non-numeric data in Temp_max
 
-bom_data%>%
-  filter(!is.na(Temp_min))
+bom_data%>%  
+  filter(!is.na(Solar_exposure)) # Checking for non-numeric data in Solar_exposure
+#--------------------------------#
 
- 
-  #filter(Temp_min !="-") %>% # Filter on minimum temperature values
-  #filter(Temp_max !="-") %>% # Filter on maximum temperature values
-  #filter(Rainfall !="-") %>% # Filter on rainfall values
+#bom_data %>%  
+ # filter(!is.na(Temp_min) %>% # Filter on minimum temperature values
+ # filter(Temp_max !=NA) %>% # Filter on maximum temperature values
+ # filter(Rainfall !=NA) %>% # Filter on rainfall values
+  
   #group_by(Station_number) %>% # For each station
   #summarise(Day=n()) # Number of days for each station 
 
