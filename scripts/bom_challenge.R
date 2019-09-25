@@ -36,15 +36,15 @@ bom_raw <- read_csv("Data/BOM_data.csv", na = "-",
 bom_raw
 
 
-bom_data <- bom_raw %>% 
+bom_data_clean <- bom_raw %>% 
  separate(col = Temp_min_max, into = c("Temp_min","Temp_max"), sep="/") %>% # Split columns Temp_min_max into Temp_min and Temp_max
  mutate(Temp_min = ifelse(str_detect(Temp_min,"-"),yes = NA,no = Temp_min), # Replacing "-" with NA in Temp_min
         Temp_max = ifelse(str_detect(Temp_max,"-"),yes = NA,no = Temp_max))%>% # # Replacing "-" with NA in Temp_max
  mutate_at(vars(Temp_min, Temp_max), as.numeric) %>% 
- write_csv("Data/bom_data.csv") 
+ write_csv("Data/bom_data_clean.csv") 
 
 #----- Check for non-numeric -----#
-#bom_data <- read.csv("")%>%  
+#bom_data_clean <- read.csv("Data/bom_data_clean")%>%  
   filter(!is.na(Temp_min | Temp_max)) # Checking for non-numeric data in Temp_min
 
 bom_data%>%
