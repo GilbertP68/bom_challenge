@@ -23,16 +23,36 @@ library(data.table)
 #--- Answer the question ---#
 # 1. 
 
-bom_data <- read_csv("Data/BOM_data.csv")
-bom_data
+bom_raw <- read_csv("Data/BOM_data.csv", na = "-",
+                     col_types = cols(
+                       Station_number = col_double(),
+                       Year = col_double(),
+                       Month = col_double(),
+                       Day = col_double(),
+                       Temp_min_max = col_character(),
+                       Rainfall = col_double(),
+                       Solar_exposure = col_double()
+                     ))
+bom_raw
 
-bom_data %>% 
+bom_data <- bom_raw %>% 
   separate(col = Temp_min_max, into = c("Temp_min","Temp_max"), sep="/") %>% 
-  filter(Temp_min !="-") %>% # Filter on minimum temperature values
-  filter(Temp_max !="-") %>% # Filter on maximum temperature values
-  filter(Rainfall !="-") %>% # Filter on rainfall values
-  group_by(Station_number) %>% # For each station
-  summarise(Day=n()) # Number of days for each station 
+  mutate(Temp_min = ifelse(str_detect(Temp_min,"-"),yes = NA,no = Temp_min),
+         Temp_max = ifelse(str_detect(Temp_max,"-"),yes = NA,no = Temp_max))%>%
+  mutate_at(vars(Temp_min, Temp_max), as.numeric)
+
+bom_data%>%
+  filter(!is.na(Solar_exposure))
+
+bom_data%>%
+  filter(!is.na(Temp_min))
+
+ 
+  #filter(Temp_min !="-") %>% # Filter on minimum temperature values
+  #filter(Temp_max !="-") %>% # Filter on maximum temperature values
+  #filter(Rainfall !="-") %>% # Filter on rainfall values
+  #group_by(Station_number) %>% # For each station
+  #summarise(Day=n()) # Number of days for each station 
 
 ##### Question 2 #####
 # Which month saw the lowest average daily temperature difference?
