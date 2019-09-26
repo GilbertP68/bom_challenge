@@ -45,7 +45,7 @@ bom_data_clean <- bom_raw %>%
 #----- Filtering on numeric data -----#
 bom_data_clean%>%  
   group_by(Station_number)%>%
-  filter(Temp_min >= 0, Temp_max >= 0, Rainfall >= 0) %>%  # Filter on numeric data in Temp_min, Temp_max, Rainfall
+  filter(Temp_min >= 0, Temp_max >= 0, Rainfall >= 0)# %>%  # Filter on numeric data in Temp_min, Temp_max, Rainfall
   summarise(Day=n()) %>%  # Number of days for each station 
   write_csv("Results/bom_data_dats_with_measurements")
 
@@ -65,6 +65,62 @@ bom_data_clean %>%
   # month_lowest_mean_daily_Temp_diff <- mean_Temp_diff)     
     
 ##### Question 3 ##### 
+# Which state saw the lowest average daily temperature difference?
+bom_stations_raw <- read_csv("Data/BOM_stations.csv")
+bom_stations_raw 
+
+bom_data_clean <- read_csv("Data/bom_data_clean.csv")
+bom_data_clean                           
+                           
+bom_stations_raw %>% 
+  gather(Station_number, data, -info) %>%
+  spread(info, data) %>% 
+  select(Station_number, state, start, end, elev, lat, lon, name) %>% 
+  group_by(state) %>% 
+  write_csv("Data/bom_stations_raw.csv")
+
+meteo_data <- read_csv("Data/bom_data_clean.csv",
+                       col_types= cols(
+                         Station_number = col_double(),
+                         Year = col_double(),
+                         Month = col_double(),
+                         Day = col_double(),
+                         Temp_min = col_double(),
+                         Temp_max = col_double(),
+                         Rainfall = col_double(),
+                         Solar_exposure = col_double()
+                       ))
+meteo_data
+
+stations_data <- read_csv("Data/bom_stations_raw.csv")
+stations_data
+
+stations_meteo_merged <- full_join(meteo_data, stations_data, by = c("Station_number" = "Station_number"))
+stations_meteo_merged
+
+stations_meteo_merged %>% 
+write_csv("Data/stations_meteo_merged")
+
+stations_meteo_merged %>%  
+  filter(Temp_min >= 0, Temp_max >= 0) %>%
+  mutate(Temp_diff = Temp_max - Temp_min) %>% 
+  group_by(state) %>% 
+  summarise(mean_Temp_diff = mean(Temp_diff)) %>% 
+  arrange(mean_Temp_diff) %>%
+  slice(1) %>% 
+  write_csv("Results/state_with_lowest_mean_diff.csv")
 
 
+##### Question 4 ##### 
+# Does the westmost (lowest longitude) or eastmost (highest longitude)
+# weather station in our dataset have a higher average solar exposure?
+
+stations_meteo_merged %>% 
+  select(lon, Solar_exposure, Station_number) %>%
+  filter(Solar_exposure >= 0) %>% 
+  group_by(lon) %>% 
+  summarise(mean_Solar_exposure = mean(Solar_exposure)) %>%
+  arrange(lon) %>% 
   
+    
+
