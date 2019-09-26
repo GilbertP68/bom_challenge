@@ -33,7 +33,6 @@ bom_raw <- read_csv("Data/BOM_data.csv", na = "-",
                        Rainfall = col_double(),
                        Solar_exposure = col_double() # The col_character for Solar_exposure has been changed to col_double as type
                      ))
-bom_raw
 
 
 bom_data_clean <- bom_raw %>% 
@@ -43,30 +42,29 @@ bom_data_clean <- bom_raw %>%
  mutate_at(vars(Temp_min, Temp_max), as.numeric) %>% 
  write_csv("Data/bom_data_clean.csv") 
 
-#----- Check for non-numeric -----#
-#bom_data_clean <- read.csv("Data/bom_data_clean")%>%  
-  filter(!is.na(Temp_min | Temp_max)) # Checking for non-numeric data in Temp_min
+#----- Filtering on numeric data -----#
+bom_data_clean%>%  
+  group_by(Station_number)%>%
+  filter(Temp_min >= 0, Temp_max >= 0, Rainfall >= 0) %>%  # Filter on numeric data in Temp_min, Temp_max, Rainfall
+  summarise(Day=n()) %>%  # Number of days for each station 
+  write_csv("Results/bom_data_dats_with_measurements")
 
-bom_data%>%
-  filter(!is.na(Temp_max)) # Checking for non-numeric data in Temp_max
-
-bom_data%>%  
-  filter(!is.na(Solar_exposure)) # Checking for non-numeric data in Solar_exposure
-#--------------------------------#
-
-#bom_data %>%  
- # filter(!is.na(Temp_min) %>% # Filter on minimum temperature values
- # filter(Temp_max !=NA) %>% # Filter on maximum temperature values
- # filter(Rainfall !=NA) %>% # Filter on rainfall values
-  
-  #group_by(Station_number) %>% # For each station
-  #summarise(Day=n()) # Number of days for each station 
 
 ##### Question 2 #####
 # Which month saw the lowest average daily temperature difference?
 
-bom_data %>% 
-  separate(col = Temp_min_max, into = c("Temp_min","Temp_max"), sep="/") %>% 
-  filter(Temp_min !="-") %>% # Filter on minimum temperature values
-  filter(Temp_max !="-") %>% # Filter on maximum temperature values
-  select(Station_number, Year, Month, Day, Temp_min, Temp_max, Rainfall, Solar_exposure)
+bom_data_clean %>%  
+  filter(Temp_min >= 0, Temp_max >= 0) %>%
+  mutate(Temp_diff = Temp_max - Temp_min) %>% 
+  group_by(Month) %>% 
+  summarise(mean_Temp_diff = mean(Temp_diff)) %>% 
+  arrange(mean_Temp_diff) %>%
+  slice(1) %>% 
+  write_csv("Results/month_with_lowest_mean_diff.csv")
+  #select(Month, min(mean_Temp_diff))
+  # month_lowest_mean_daily_Temp_diff <- mean_Temp_diff)     
+    
+##### Question 3 ##### 
+
+
+  
