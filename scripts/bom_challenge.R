@@ -1,4 +1,8 @@
 ##### Challenge Putting it all together #####
+# install.packages("tidyverse")
+# install.packages("data.table")
+# installed.packages()
+
 library(tidyverse)
 library(data.table)
 
@@ -23,31 +27,35 @@ library(data.table)
 #--- Answer the question ---#
 # 1. 
 
-bom_raw <- read_csv("Data/BOM_data.csv", na = "-",
-                     col_types = cols(
-                       Station_number = col_double(),
-                       Year = col_double(),
-                       Month = col_double(),
-                       Day = col_double(),
-                       Temp_min_max = col_character(),
-                       Rainfall = col_double(),
-                       Solar_exposure = col_double() # The col_character for Solar_exposure has been changed to col_double as type
-                     ))
+#bom_raw <- read_csv("Data/BOM_data.csv", na = "-",
+#                    col_types = cols(
+#                       Station_number = col_double(),
+#                       Year = col_double(),
+#                       Month = col_double(),
+#                       Day = col_double(),
+#                       Temp_min_max = col_character(),
+#                       Rainfall = col_double(),
+#                       Solar_exposure = col_double() # The col_character for Solar_exposure has been changed to col_double as type
+#                     ))
 
+#bom_raw %>% 
+#write_csv("Data/bom_raw.csv")
 
 bom_data_clean <- bom_raw %>% 
- separate(col = Temp_min_max, into = c("Temp_min","Temp_max"), sep="/") %>% # Split columns Temp_min_max into Temp_min and Temp_max
- mutate(Temp_min = ifelse(str_detect(Temp_min,"-"),yes = NA,no = Temp_min), # Replacing "-" with NA in Temp_min
-        Temp_max = ifelse(str_detect(Temp_max,"-"),yes = NA,no = Temp_max))%>% # # Replacing "-" with NA in Temp_max
- mutate_at(vars(Temp_min, Temp_max), as.numeric) %>% 
- write_csv("Data/bom_data_clean.csv") 
+  separate(col = Temp_min_max, into = c("Temp_min","Temp_max"), sep="/") %>% # Split columns Temp_min_max into Temp_min and Temp_max
+  mutate(Temp_min = ifelse(str_detect(Temp_min,"-"),yes = NA,no = Temp_min), # Replacing "-" with NA in Temp_min
+         Temp_max = ifelse(str_detect(Temp_max,"-"),yes = NA,no = Temp_max))%>% # # Replacing "-" with NA in Temp_max
+  mutate_at(vars(Temp_min, Temp_max, Solar_exposure), as.numeric) %>%
+  write_csv("Data/bom_data_clean.csv")
+
+
 
 #----- Filtering on numeric data -----#
 bom_data_clean%>%  
   group_by(Station_number)%>%
-  filter(Temp_min >= 0, Temp_max >= 0, Rainfall >= 0)# %>%  # Filter on numeric data in Temp_min, Temp_max, Rainfall
+  filter(Temp_min >= 0, Temp_max >= 0, Rainfall >= 0) %>%  # Filter on numeric data in Temp_min, Temp_max, Rainfall
   summarise(Day=n()) %>%  # Number of days for each station 
-  write_csv("Results/bom_data_dats_with_measurements")
+  write_csv("Results/bom_data_days_with_measurements.csv")
 
 
 ##### Question 2 #####
@@ -69,9 +77,6 @@ bom_data_clean %>%
 bom_stations_raw <- read_csv("Data/BOM_stations.csv")
 bom_stations_raw 
 
-bom_data_clean <- read_csv("Data/bom_data_clean.csv")
-bom_data_clean                           
-                           
 bom_stations_raw %>% 
   gather(Station_number, data, -info) %>%
   spread(info, data) %>% 
@@ -99,7 +104,7 @@ stations_meteo_merged <- full_join(meteo_data, stations_data, by = c("Station_nu
 stations_meteo_merged
 
 stations_meteo_merged %>% 
-write_csv("Data/stations_meteo_merged")
+write_csv("Data/stations_meteo_merged.csv")
 
 stations_meteo_merged %>%  
   filter(Temp_min >= 0, Temp_max >= 0) %>%
@@ -107,7 +112,7 @@ stations_meteo_merged %>%
   group_by(state) %>% 
   summarise(mean_Temp_diff = mean(Temp_diff)) %>% 
   arrange(mean_Temp_diff) %>%
-  slice(1) %>% 
+  slice(1)  %>% 
   write_csv("Results/state_with_lowest_mean_diff.csv")
 
 
@@ -115,12 +120,29 @@ stations_meteo_merged %>%
 # Does the westmost (lowest longitude) or eastmost (highest longitude)
 # weather station in our dataset have a higher average solar exposure?
 
-stations_meteo_merged %>% 
-  select(lon, Solar_exposure, Station_number) %>%
-  filter(Solar_exposure >= 0) %>% 
-  group_by(lon) %>% 
-  summarise(mean_Solar_exposure = mean(Solar_exposure)) %>%
-  arrange(lon) %>% 
-  
+stations_ew <- stations_meteo_merged %>%
+    select(lon, Solar_exposure, Station_number) %>%
+    filter(!is.na(Solar_exposure), # Filtering on Solar exposure that excludes "NA" and on "longitude"
+          lon %in% c(max(lon), min(lon))) %>% # that will display only maximum and minimum longitudes
+    group_by(lon, Station_number) %>%
+    summarise(mean_Solar_exposure = mean(Solar_exposure))%>%
+    ungroup %>% 
+    arrange(lon)
     
+    ifelse(stations_ew$mean_Solar_exposure[1] > stations_ew$mean_Solar_exposure[2],
+       "WESTMOST has a higher average solar exposure than EASTMOST",
+       "EASTMOST has a higher average solar exposure than WESTMOST")
+
+##### Same as above but the dataframe was not assigned to a variable so as we can see the results #####
+stations_meteo_merged  %>% 
+  select(lon, Solar_exposure, Station_number) %>%
+  filter(!is.na(Solar_exposure),  # Filtering on solar exposure that excludes "NA" 
+        lon %in% c(max(lon), min(lon))) %>% # as well as on longitude that will display maximum and minimum values
+  group_by(lon, Station_number) %>% 
+  summarise(mean_Solar_exposure = mean(Solar_exposure))
+# ungroup %>% ##### It looks like ungroup is unnecessary!
+# arrange(lon) ##### Same applies to "arrange(lon)", which is unnecessay!
+    
+  
+  
 
