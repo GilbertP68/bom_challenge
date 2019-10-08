@@ -107,7 +107,7 @@ stations_meteo_merged %>%
 # weather station in our dataset have a higher average solar exposure?
 
 
-stations_ew <- stations_meteo_merged %>% 
+stations_meteo_merged %>% 
   select(lon, Solar_exposure, Station_number) %>%
   filter(!is.na(Solar_exposure), # Filtering on Solar exposure that excludes "NA" and on "longitude"
          lon %in% c(max(lon), min(lon)))%>% # that will display only maximum and minimum longitudes
