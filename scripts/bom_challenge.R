@@ -23,16 +23,7 @@ library(data.table)
 #--- Answer the question ---#
 # 1. 
 
-bom_raw <- read_csv("Data/BOM_data.csv", na = "-",
-                     col_types = cols(
-                       Station_number = col_double(),
-                       Year = col_double(),
-                       Month = col_double(),
-                       Day = col_double(),
-                       Temp_min_max = col_character(),
-                       Rainfall = col_double(),
-                       Solar_exposure = col_double() # The col_character for Solar_exposure has been changed to col_double as type
-                     ))
+
 
 
 bom_data_clean <- bom_raw %>% 
@@ -45,9 +36,9 @@ bom_data_clean <- bom_raw %>%
 #----- Filtering on numeric data -----#
 bom_data_clean%>%  
   group_by(Station_number)%>%
-  filter(Temp_min >= 0, Temp_max >= 0, Rainfall >= 0)# %>%  # Filter on numeric data in Temp_min, Temp_max, Rainfall
-  summarise(Day=n()) %>%  # Number of days for each station 
-  write_csv("Results/bom_data_dats_with_measurements")
+  filter(Temp_min >= 0, Temp_max >= 0, Rainfall >= 0) %>%  # Filter on numeric data in Temp_min, Temp_max, Rainfall
+  summarise(Day=n())%>%  # Number of days for each station 
+  write_csv("Results/bom_data_days_with_measurements.csv")
 
 
 ##### Question 2 #####
@@ -99,7 +90,7 @@ stations_meteo_merged <- full_join(meteo_data, stations_data, by = c("Station_nu
 stations_meteo_merged
 
 stations_meteo_merged %>% 
-write_csv("Data/stations_meteo_merged")
+write_csv("Data/stations_meteo_merged.csv")
 
 stations_meteo_merged %>%  
   filter(Temp_min >= 0, Temp_max >= 0) %>%
@@ -115,12 +106,42 @@ stations_meteo_merged %>%
 # Does the westmost (lowest longitude) or eastmost (highest longitude)
 # weather station in our dataset have a higher average solar exposure?
 
+
+stations_ew <- stations_meteo_merged %>% 
+  select(lon, Solar_exposure, Station_number) %>%
+  filter(!is.na(Solar_exposure), # Filtering on Solar exposure that excludes "NA" and on "longitude"
+         lon %in% c(max(lon), min(lon)))%>% # that will display only maximum and minimum longitudes
+  group_by(lon, Station_number) %>%
+  summarise(mean_Solar_exposure = mean(Solar_exposure))%>%
+  ungroup%>%
+  arrange(lon)
+
+ifelse(stations_ew$mean_Solar_exposure[1] > stations_ew$mean_Solar_exposure[2], "WESTMOST", "EASTMOST")
+
+#######################################################################################################
+filter(Solar_exposure >= 0) %>% 
+  group_by(lon) %>%
+  distinct(lon, Station_number)%>%
+  arrange(lon)
+
+
+
+stations_meteo_merged %>% 
+  select(lon, Solar_exposure, Station_number) %>%
+  filter(Solar_exposure >= 0) %>% 
+  group_by(lon) #%>% 
+  summarise(mean_Solar_exposure = mean(Solar_exposure))%>%
+  filter(lon %in% c(max(lon), min(lon)))
+  #arrange(lon, mean_Solar_exposure)
+  
+  
+  
 stations_meteo_merged %>% 
   select(lon, Solar_exposure, Station_number) %>%
   filter(Solar_exposure >= 0) %>% 
   group_by(lon) %>% 
   summarise(mean_Solar_exposure = mean(Solar_exposure)) %>%
-  arrange(lon) %>% 
+  arrange(desc(lon)) %>% # To find out the solar exposure for the eastmost
+  slice(1)
   
-    
 
