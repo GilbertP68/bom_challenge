@@ -201,22 +201,22 @@ plot_grid(TpMin_Max, TpMax_Rain, TpMax_Solar, all_in_One)
 # Calculate the average monthly rainfall for each station
 # Produce a line plot to visualise this data and the state 
 
-stations_meteo_merged  %>% 
-  select(state, Station_number, Month, Rainfall) %>%
+state_station_month_rain <- stations_meteo_merged  %>%
+  select(state, Station_number, name, Month, Rainfall) %>%
   filter(!is.na(Rainfall)) %>% 
-  group_by(Month) %>% 
-  summarise(mean_rainfall = mean(Rainfall))
-          
+  group_by(state, name, Month) %>% 
+  summarise(mean_rainfall = mean(Rainfall)) %>% 
+  ungroup() 
+ 
+mthlist <- month.abb[c(seq(1,12,1))]
+      
+ggplot(data = state_station_month_rain,
+       mapping = aes(x = Month,
+                     y = mean_rainfall,
+                     group = name,
+                     colour = name,
+                     )) +
+  geom_line()+
+    scale_x_continuous(limits= c(1,12), breaks = c(seq(1,12,1)), label = mthlist)+
+  facet_grid(state~.)
 
-# Filtering on solar exposure that excludes "NA" 
-         #lon %in% c(max(lon), min(lon))) %>% # as well as on longitude that will display maximum and minimum values
-  group_by(lon, Station_number) %>% 
-  summarise(mean_Solar_exposure = mean(Solar_exposure))
-
-stations_meteo_merged %>%  
-  filter(Temp_min >= 0, Temp_max >= 0) %>%
-  mutate(Temp_diff = Temp_max - Temp_min) %>% 
-  group_by(state) %>% 
-  summarise(mean_Temp_diff = mean(Temp_diff)) %>% 
-  arrange(mean_Temp_diff)
-  
