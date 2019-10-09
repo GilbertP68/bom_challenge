@@ -1,8 +1,4 @@
 ##### Challenge Putting it all together #####
-# install.packages("tidyverse")
-# install.packages("data.table")
-# installed.packages()
-
 library(tidyverse)
 library(data.table)
 
@@ -25,21 +21,7 @@ library(data.table)
 #    the folder "Data"
 #
 #--- Answer the question ---#
-# 1. 
 
-#bom_raw <- read_csv("Data/BOM_data.csv", na = "-",
-#                    col_types = cols(
-#                       Station_number = col_double(),
-#                       Year = col_double(),
-#                       Month = col_double(),
-#                       Day = col_double(),
-#                       Temp_min_max = col_character(),
-#                       Rainfall = col_double(),
-#                       Solar_exposure = col_double() # The col_character for Solar_exposure has been changed to col_double as type
-#                     ))
-
-#bom_raw %>% 
-#write_csv("Data/bom_raw.csv")
 
 bom_data_clean <- bom_raw %>% 
   separate(col = Temp_min_max, into = c("Temp_min","Temp_max"), sep="/") %>% # Split columns Temp_min_max into Temp_min and Temp_max
@@ -47,8 +29,6 @@ bom_data_clean <- bom_raw %>%
          Temp_max = ifelse(str_detect(Temp_max,"-"),yes = NA,no = Temp_max))%>% # # Replacing "-" with NA in Temp_max
   mutate_at(vars(Temp_min, Temp_max, Solar_exposure), as.numeric) %>%
   write_csv("Data/bom_data_clean.csv")
-
-
 
 #----- Filtering on numeric data -----#
 bom_data_clean%>%  
@@ -142,7 +122,3 @@ stations_meteo_merged  %>%
   summarise(mean_Solar_exposure = mean(Solar_exposure))
 # ungroup %>% ##### It looks like ungroup is unnecessary!
 # arrange(lon) ##### Same applies to "arrange(lon)", which is unnecessay!
-    
-  
-  
-
