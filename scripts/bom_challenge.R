@@ -122,3 +122,101 @@ stations_meteo_merged  %>%
   summarise(mean_Solar_exposure = mean(Solar_exposure))
 # ungroup %>% ##### It looks like ungroup is unnecessary!
 # arrange(lon) ##### Same applies to "arrange(lon)", which is unnecessay!
+
+    
+    
+    
+    
+############# Challenge 09.10.19 ##############
+##### Question 1 #####
+ 
+       
+perth <- filter(stations_meteo_merged, Station_number == 9225)
+                
+perth    
+    
+##### Temp_max vs Temp_min
+ggplot(data = perth,
+       mapping = aes(x = Temp_min,
+                   y = Temp_max)) +
+  geom_point()
+  
+##### Temp_max vs Rainfall
+ggplot(data = perth,
+       mapping = aes(x = Temp_max,
+                     y = Rainfall)) +
+  geom_point()
+
+##### Temp_max vs solar exposure
+ggplot(data = perth,
+       mapping = aes(x = Solar_exposure,
+                     y = Temp_max)) +
+  geom_point()
+
+
+##### Question 2 #####
+ggplot(data = perth,
+       mapping = aes(x = Temp_min,
+                     y = Temp_max,
+                     size = Rainfall,
+                     colour = Solar_exposure)) +
+  geom_point()
+
+
+########## Question 3 ##########
+install.packages("cowplot")
+library(cowplot)
+
+##### Temp_max vs Temp_min
+TpMin_Max <- ggplot(data = perth,
+       mapping = aes(x = Temp_min,
+                     y = Temp_max)) +
+  geom_point()
+
+##### Temp_max vs Rainfall
+TpMax_Rain <- ggplot(data = perth,
+       mapping = aes(x = Temp_max,
+                     y = Rainfall)) +
+  geom_point()
+
+##### Temp_max vs solar exposure
+TpMax_Solar <- ggplot(data = perth,
+       mapping = aes(x = Solar_exposure,
+                     y = Temp_max)) +
+  geom_point()
+
+
+##### All in One #####
+all_in_One <- ggplot(data = perth,
+       mapping = aes(x = Temp_min,
+                     y = Temp_max,
+                     size = Rainfall,
+                     colour = Solar_exposure)) +
+  geom_point()
+
+plot_grid(TpMin_Max, TpMax_Rain, TpMax_Solar, all_in_One)
+
+
+##### Question 4 #####
+# Calculate the average monthly rainfall for each station
+# Produce a line plot to visualise this data and the state 
+
+stations_meteo_merged  %>% 
+  select(state, Station_number, Month, Rainfall) %>%
+  filter(!is.na(Rainfall)) %>% 
+  group_by(Month) %>% 
+  summarise(mean_rainfall = mean(Rainfall))
+          
+
+# Filtering on solar exposure that excludes "NA" 
+         #lon %in% c(max(lon), min(lon))) %>% # as well as on longitude that will display maximum and minimum values
+  group_by(lon, Station_number) %>% 
+  summarise(mean_Solar_exposure = mean(Solar_exposure))
+
+stations_meteo_merged %>%  
+  filter(Temp_min >= 0, Temp_max >= 0) %>%
+  mutate(Temp_diff = Temp_max - Temp_min) %>% 
+  group_by(state) %>% 
+  summarise(mean_Temp_diff = mean(Temp_diff)) %>% 
+  arrange(mean_Temp_diff)
+  
