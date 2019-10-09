@@ -204,19 +204,30 @@ plot_grid(TpMin_Max, TpMax_Rain, TpMax_Solar, all_in_One)
 state_station_month_rain <- stations_meteo_merged  %>%
   select(state, Station_number, name, Month, Rainfall) %>%
   filter(!is.na(Rainfall)) %>% 
-  group_by(state, name, Month) %>% 
+  group_by(state, Station_number, Month) %>% 
   summarise(mean_rainfall = mean(Rainfall)) %>% 
   ungroup() 
  
 mthlist <- month.abb[c(seq(1,12,1))]
       
-ggplot(data = state_station_month_rain,
+rainBymonth_state<- ggplot(data = state_station_month_rain,
        mapping = aes(x = Month,
                      y = mean_rainfall,
-                     group = name,
-                     colour = name,
+                     group = Station_number,
+                     colour = Station_number,
                      )) +
   geom_line()+
     scale_x_continuous(limits= c(1,12), breaks = c(seq(1,12,1)), label = mthlist)+
-  facet_grid(state~.)
+  facet_grid(state~.)+
+  labs(title = "Average monthly rainfall by station by state",
+       x = "Month",
+       y = "Mean rainfall (mm)")+
+  theme(panel.grid.major = element_blank(),
+        axis.line = element_line(colour = "black", size = 0.2))
 
+rainBymonth_state + guides(
+  fill = guide_legend(
+  title.theme = element_text(
+  size = 2,
+  colour = "red"
+)))
